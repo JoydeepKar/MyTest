@@ -62,7 +62,7 @@ if($loop->have_posts()): while ( $loop->have_posts() ) : $loop->the_post();
 <?php endwhile; endif; wp_reset_query();?>
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////  ACF Image  /////////////////////////////////////////////
+//////////////////////////////  ACF Image Object  /////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////
 
 <?php
@@ -103,4 +103,54 @@ $height = $image['sizes'][ $size . '-height' ];
 		?>
 	</ul>
 	<?php wp_pagenavi(array( 'query' =>$loop)); ?>
+
+////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////  Hooking CF7  //////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////
+
+add_action('wpcf7_before_send_mail', 'cp_wpcf7_override');
+
+function cp_wpcf7_override($form)
+{
+    $wpcf7 = WPCF7_ContactForm::get_current();
+    $submission = WPCF7_Submission::get_instance();
+    $data = $submission->get_posted_data();
+	// For Inquiry Form
+	if($data['_wpcf7'] == 73 && $data['inquiry'] == true){
+		$admin_email = get_option('admin_email');
+
+		$headers = 'From: Classic V8 Sales <'.$admin_email.'>';
+		$to = $data["emailadd"];
+		$subject = 'Classic V8 Sales Enquiry Form';
+
+        $message .= "<strong>Name: </strong>".$data["fname"]." ".$data["lname"]."<br>";
+        $message .= "<strong>Phone: </strong>".$data["phone"]."<br>";
+        $message .= "<strong>Email Address: </strong>".$data["emailadd"]."<br>";
+		$message .= "<strong>Message: </strong>".$data['message'];
+		
+		wp_mail( $to, $subject, $message, $headers );
+/*****************************************************************************/
+  // check if we want to run this code on selected form
+    // get current FORM instance
+    $wpcf7 = WPCF7_ContactForm::get_current();
+    // get current SUBMISSION instance
+    $submission = WPCF7_Submission::get_instance();
+    // get submission data
+    $data = $submission->get_posted_data();
+    // nothing's here... do nothing...
+    if(empty($data)) return;
+    // extract posted data
+    $prop_manager = $data['menu-627'];
+    // maybe do some replacements in the cf7 email body?
+    $mail = $wpcf7->prop('mail');
+    $mail['recipient'] = $mail['recipient'].",".$prop_manager;
+    $mail['subject'] = $mail['subject'].' '.$data['text-935'];
+    $wpcf7->set_properties(array("mail" => $mail));
+/*    $mail = $wpcf7->prop('mail');
+    $mail['recipient'] = $mail['recipient'].",".$prop_manager;
+    $wpcf7->set_properties(array("mail" => $mail));*/
+    //echo '<pre>';print_r($wpcf7->prop('mail'));die();
+    return $wpcf7;
+/****************************************************************************/
+}
 
