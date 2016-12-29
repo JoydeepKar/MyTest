@@ -1,0 +1,556 @@
+JSP Expression Language (EL) makes it possible to easily access application data stored in JavaBeans components. JSP EL allows you to create expressions both (a) arithmetic and (b) logical. Within a JSP EL expression, you can use integers, floating point numbers, strings
+
+Typically, when you specify an attribute value in a JSP tag, you simply use a string. For example:
+<jsp:setProperty name="box" property="perimeter" value="100"/>
+JSP EL allows you to specify an expression for any of these attribute values. A simple syntax for JSP EL is as follows:
+${expr}
+
+You can also use JSP EL expressions within template text for a tag. For example, the <jsp:text> tag simply inserts its content within the body of a JSP. The following <jsp:text> declaration inserts <h1>Hello JSP!</h1> into the JSP output:
+
+ 
+<jsp:text>
+<h1>Hello JSP!</h1>
+</jsp:text>
+
+
+<jsp:text>
+Box Perimeter is: ${2*box.width + 2*box.height}
+</jsp:text>
+
+To deactivate the evaluation of EL expressions, we specify the isELIgnored attribute of the page directive as below:
+
+<%@ page isELIgnored ="true|false" %>
+
+The JSP expression language supports the following implicit objects:
+
+Implicit object	Description
+pageScope		Scoped variables from page scope
+requestScope		Scoped variables from request scope
+sessionScope		Scoped variables from session scope
+applicationScope	Scoped variables from application scope
+param			Request parameters as strings
+paramValues		Request parameters as collections of strings
+header			HTTP request headers as strings
+headerValues		HTTP request headers as collections of strings
+initParam		Context-initialization parameters
+cookie			Cookie values
+pageContext		The JSP PageContext object for the current page
+
+
+<form action='param.jsp'>	
+ <table>
+            <tr>
+               <td>First Name:</td>
+               <td><input type='text' name='firstName'/></td>
+            </tr>
+            <tr>
+               <td>Last Name:</td>
+               <td><input type='text' name='lastName'/></td>
+            </tr>
+            <tr>
+               <td>
+                  Select languages that you have worked with: 
+               </td>
+               <td>
+                  <select name='languages' size='7' 
+                      multiple='true'>
+                     <option value='Ada'>Ada</option>
+                     <option value='C'>C</option>
+                     <option value='C++'>C++</option>
+                     <option value='Cobol'>Cobol</option>
+                     <option value='Eiffel'>Eiffel</option>
+                     <option value='Objective-C'>
+                        Objective-C
+                     </option>
+                     <option value='Java'>Java</option>
+                  </select>
+               </td>
+            </tr>
+         </table>
+         <p><input type='submit' value='Finish Survey'/>
+      </form>
+
+param.jsp
+======================================================================
+
+<%@ taglib uri='http://java.sun.com/jstl/core' prefix='c' %>
+
+      <%-- Access the lastName and firstName request parameters
+           parameters by name --%>
+      <c:out value='${param.lastName}'/>, 
+      <c:out value='${param.firstName}'/>
+
+      <%-- Show all request parameters and their values --%>
+      <c:forEach var='parameter' items='${paramValues}'> 
+         <ul>
+            <li><b><c:out value='${parameter.key}'/></b>:</li>
+            <c:forEach var='value' items='${parameter.value}'>
+               <c:out value='${value}'/>   
+            </c:forEach>
+         </ul>
+      </c:forEach>
+
+      <%-- Show values for the languages request parameter --%>
+      <font size='5'>
+         Languages:
+      </font><p>
+
+      <%-- paramValues.languages is a String [] of values for the 
+           languages request parameter --%>
+      <c:forEach var='language' items='${paramValues.languages}'> 
+         <c:out value='${language}'/>
+      </c:forEach>
+
+
+<%@ taglib uri='http://java.sun.com/jstl/core' prefix='c' %>
+      <c:forEach items='${header}' var='h'>
+         <ul>
+            <%-- Display the key of the current item, which
+                 represents the request header name and the
+                 current item's value, which represents the
+                 header value --%>
+            <li>Header Name: <c:out value='${h.key}'/></li>
+            <li>Header Value: <c:out value='${h.value}'/></li>
+         </ul>
+      </c:forEach>
+
+
+<web-app>
+   <!-- Application-wide default values for the Acme Invaders
+        online game -->
+   <context-param>
+      <param-name>com.acme.invaders.difficulty</param-name>
+      <param-value>18</param-value>
+   </context-param>
+
+   <context-param>
+      <param-name>com.acme.invaders.gameLevels</param-name>
+      <param-value>33</param-value>
+   </context-param>
+
+   <welcome-file-list>
+      <welcome-file>
+         index.jsp
+      </welcome-file>
+   </welcome-file-list>
+</web-app>	
+
+<c:forEach items='${initParam}' var='parameter'>	
+ <ul>
+            <%-- Display the key of the current item, which
+                 corresponds to the name of the init param --%>
+            <li>Name: <c:out value='${parameter.key}'/></li>
+
+            <%-- Display the value of the current item, which
+                 corresponds to the value of the init param --%>
+            <li>Value: <c:out value='${parameter.value}'/></li>
+         </ul>
+      </c:forEach>
+
+      <font size='5'>
+         Accessing Context Initialization Parameters Directly:
+      </font><p>
+
+      Difficulty: 
+      <c:out value='${initParam["com.acme.invaders.difficulty"]}'/>
+
+      Game Levels: 
+      <c:out value='${initParam["com.acme.invaders.gameLevels"]}'/>
+
+
+<c:forEach items='${cookie}' var='mapEntry'>
+         <ul>
+            <%-- The mapEntry's key references the cookie name --%>
+            <li>Cookie Name: <c:out value='${mapEntry.key}'/></li>
+
+            <%-- The mapEntry's value references the Cookie
+                 object, so we show the cookie's value --%>
+            <li>Cookie Value: 
+                <c:out value='${mapEntry.value.value}'/></li>
+         </ul>
+      </c:forEach>
+            User Name: <c:out value='${cookie["acme.userName"]}'/>
+         </li>
+         <li>
+            Password:  <c:out value='${cookie["acme.password"]}'/>
+
+=====================================================================================================================================
+
+JSP custom tags vs Java Beans
+
+
+
+A custom JSP tag has to be interpreted and run inside a JSP; a Java Bean does not.
+
+A custom JSP tag has to extend the javax.servlet.jsp.tagext.Tag interface; a Java Bean does not.
+
+A custom JSP tag might use other Java Beans to do its work, but the reverse is not true.
+
+======================================================================================================================================
+JSP custom tags
+
+A custom tag is a user-defined JSP language element. When a JSP page containing a custom tag is translated into a servlet
+
+So let us create HelloTag class as follows:
+package com.tutorialspoint;
+
+import javax.servlet.jsp.tagext.*;
+import javax.servlet.jsp.*;
+import java.io.*;
+
+public class HelloTag extends SimpleTagSupport {
+
+  public void doTag() throws JspException, IOException {
+    JspWriter out = getJspContext().getOut();
+    out.println("Hello Custom Tag!");
+  }
+}
+
+Let us compile above class and copy it in a directory available in environment variable CLASSPATH. Finally create following tag library file: <Tomcat-Installation-Directory>webapps\ROOT\WEB-INF\custom.tld.
+
+<taglib>
+  <tlib-version>1.0</tlib-version>
+  <jsp-version>2.0</jsp-version>
+  <short-name>Example TLD</short-name>
+  <tag>
+    <name>Hello</name>
+    <tag-class>com.tutorialspoint.HelloTag</tag-class>
+    <body-content>empty</body-content>
+  </tag>
+</taglib>
+in jsp page
+<%@ taglib prefix="ex" uri="WEB-INF/custom.tld"%>
+<html>
+  <head>
+    <title>A sample custom tag</title>
+  </head>
+  <body>
+    <ex:Hello/>
+  </body>
+</html>
+
+
+
+package com.tutorialspoint;
+
+import javax.servlet.jsp.tagext.*;
+import javax.servlet.jsp.*;
+import java.io.*;
+
+public class HelloTag extends SimpleTagSupport {
+
+   private String message;
+
+   public void setMessage(String msg) {
+      this.message = msg;
+   }
+
+   StringWriter sw = new StringWriter();
+
+   public void doTag()
+      throws JspException, IOException
+    {
+       if (message != null) {
+          /* Use message from attribute */
+          JspWriter out = getJspContext().getOut();
+          out.println( message );
+       }
+       else {
+          /* use message from the body */
+          getJspBody().invoke(sw);
+          getJspContext().getOut().println(sw.toString());
+       }
+   }
+
+}
+
+<taglib>
+  <tlib-version>1.0</tlib-version>
+  <jsp-version>2.0</jsp-version>
+  <short-name>Example TLD with Body</short-name>
+  <tag>
+    <name>Hello</name>
+    <tag-class>com.tutorialspoint.HelloTag</tag-class>
+    <body-content>scriptless</body-content>
+    <attribute>
+       <name>message</name>
+    </attribute>
+  </tag>
+</taglib>
+
+<%@ taglib prefix="ex" uri="WEB-INF/custom.tld"%>
+<html>
+  <head>
+    <title>A sample custom tag</title>
+  </head>
+  <body>
+    <ex:Hello message="This is custom tag" />
+  </body>
+</html>
+
+
+
+=======================================================================================================================
+
+Can an interface be implemented in the jsp file ?
+
+No.
+
+========================================================================================================================
+
+Which directive is used in jsp custom tag?
+
+The jsp taglib directive.
+
+=========================================================================================================================
+
+JSP Directive
+
+ The jsp directives are messages that tells the web container how to translate a JSP page into the corresponding servlet.
+
+There are three types of directives:
+
+    page directive
+    include directive
+    taglib directive
+
+Syntax of JSP page directive
+
+    <%@ page attribute="value" %> 
+
+Attributes of JSP page directive
+
+    import
+    contentType
+    extends
+    info
+    buffer
+    language
+    isELIgnored
+    isThreadSafe
+    autoFlush
+    session
+    pageEncoding
+    errorPage
+    isErrorPage
+The import attribute is used to import class,interface or all the members of a package.It is similar to import keyword in java class or interface. 
+
+<%@ page import="java.util.Date" %>  
+Today is: <%= new Date() %>  
+
+The contentType attribute defines the MIME(Multipurpose Internet Mail Extension) type of the HTTP response.The default value is "text/html;charset=ISO-8859-1". 
+
+<%@ page contentType=application/msword %>  
+Today is: <%= new java.util.Date() %>  
+
+info attribute simply sets the information of the JSP page which is retrieved later by using getServletInfo() method of Servlet interface. 
+
+<%@ page info="composed by Joydeep" %>  
+Today is: <%= new java.util.Date() %>  
+The web container will create a method getServletInfo() in the resulting servlet.For example:
+
+    public String getServletInfo() {  
+      return "composed by Sonoo Jaiswal";   
+    }  
+
+The buffer attribute sets the buffer size in kilobytes to handle output generated by the JSP page.The default size of the buffer is 8Kb.
+
+<%@ page buffer="16kb" %>  
+Today is: <%= new java.util.Date() %> 
+
+The language attribute specifies the scripting language used in the JSP page. The default value is "java".
+
+We can ignore the Expression Language (EL) in jsp by the isELIgnored attribute. By default its value is false i.e. Expression Language is enabled by default. We see Expression Language later.
+
+    <%@ page isELIgnored="true" %>//Now EL will be ignored  
+
+isThreadSafe
+Servlet and JSP both are multithreaded.If you want to control this behaviour of JSP page, you can use isThreadSafe attribute of page directive.The value of isThreadSafe value is true.If you make it false, the web container will serialize the multiple requests, i.e. it will wait until the JSP finishes responding to a request before passing another request to it.If you make the value of isThreadSafe attribute like:
+
+<%@ page isThreadSafe="false" %>
+
+errorPage
+
+The errorPage attribute is used to define the error page, if exception occurs in the current page, it will be redirected to the error page.
+
+<%@ page errorPage="myerrorpage.jsp" %>  
+  
+ <%= 100/0 %>  
+
+isErrorPage
+
+The isErrorPage attribute is used to declare that the current page is the error page.
+
+<%@ page isErrorPage="true" %>  
+  
+ Sorry an exception occured!<br/>  
+The exception is: <%= exception %> 
+
+
+Jsp Include Directive
+
+The include directive is used to include the contents of any resource it may be jsp file, html file or text file. The include directive includes the original content of the included resource at page translation time
+
+Advantage of Include directive
+
+Code Reusability
+
+<%@ include file="header.html" %> 
+
+JSP Taglib directive
+
+The JSP taglib directive is used to define a tag library that defines many tags. We use the TLD (Tag Library Descriptor) file to define the tags.
+Syntax JSP Taglib directive
+
+    <%@ taglib uri="uriofthetaglibrary" prefix="prefixoftaglibrary" %>  
+
+==================================================================================================================================
+
+How to disable session in JSP?
+
+    <%@ page session="false" %>   
+
+===================================================================================================================================
+
+What are JSP comments?
+
+<%-- This is JSP comment --%>
+
+===================================================================================================================================
+
+How is scripting disabled?
+
+Scripting is disabled by setting the scripting-invalid element of the deployment descriptor to true.
+
+
+<jsp-property-group>
+   <url-pattern>*.jsp</url-pattern>
+   <scripting-invalid>true</scripting-invalid>
+</jsp-property-group>
+
+====================================================================================================================================
+
+ Why is _jspService() method starting with an '_' while other life cycle methods do not?
+
+_jspService() method will be written by the container hence any methods which are not to be overridden by the end user are typically written starting with an '_'. This is the reason why we don't override _jspService() method in any JSP page.
+
+====================================================================================================================================
+
+How do you pass control from one JSP page to another?
+
+    The RequestDispatcher object ‘s forward method to pass the control.
+
+    Using the response.sendRedirect method.
+
+=====================================================================================================================================
+
+What is locale?
+
+This is a particular cultural or geographical region. It is usually referred to as a language symbol followed by a country symbol which are separated by an underscore. For example "en_US" represents english locale for US.
+
+=====================================================================================================================================
+
+Can we use JSP implicit objects in a method defined in JSP Declaration?
+
+No we can’t because JSP implicit objects are local to service method and added by JSP Container while translating JSP page to servlet source code. JSP Declarations code goes outside the service method and used to create class level variables and methods and hence can’t use JSP implicit objects.
+
+=====================================================================================================================================
+
+Which implicit object is not available in normal JSP pages?
+
+JSP exception implicit object is not available in normal JSP pages and it’s used in JSP error pages only to catch the exception thrown by the JSP pages and provide useful message to the client.
+
+======================================================================================================================================
+
+	<error-page>
+   		<error-code>404</error-code>
+   		<location>/error.jsp</location>
+   </error-page>
+
+======================================================================================================================================
+
+What is difference between JspWriter and Servlet PrintWriter?
+
+PrintWriter is the actual object responsible for writing the content in response. JspWriter uses the PrintWriter object behind the scene and provide buffer support. When the buffer is full or flushed, JspWriter uses the PrintWriter object to write the content into response.
+
+======================================================================================================================================
+
+jstl
+
+The JSP Standard Tag Library (JSTL) represents a set of tags to simplify the JSP development.
+Advantage of JSTL
+
+    Fast Developement JSTL provides many tags that simplifies the JSP.
+    Code Reusability We can use the JSTL tags in various pages.
+    No need to use scriptlet tag It avoids the use of scriptlet tag.
+
+Core tags	The JSTL core tag provide variable support, URL management, flow control etc. The url for the core tag is http://java.sun.com/jsp/jstl/core . The prefix of core tag is c.
+
+Function tags	The functions tags provide support for string manipulation and string length. The url for the functions tags is http://java.sun.com/jsp/jstl/functions and prefix is fn.
+
+Formatting tags	The Formatting tags provide support for message formatting, number and date formatting etc. The url for the Formatting tags is http://java.sun.com/jsp/jstl/fmt and prefix is fmt.
+
+XML tags	The xml sql tags provide flow control, transformation etc. The url for the xml tags is http://java.sun.com/jsp/jstl/xml and prefix is x.
+
+SQL tags	The JSTL sql tags provide SQL support. The url for the sql tags is http://java.sun.com/jsp/jstl/sql and prefix is sql.
+				==========	core tags	=======
+
+c:out ==>	 	It display the result of an expression, similar to the way <%=...%> tag work.
+			<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>  
+			<c:out value="${'Welcome to javaTpoint'}"/>  
+
+c:import ==> 		<c:import var="data" url="http://www.javatpoint.com"/>  
+			<c:out value="${data}"/>  
+			Above example would fetch the complete content from javatpoint.com and would store in a variable "data" which will 				printed eventually.
+
+<c:set> ==>		It is used to set the result of an expression evaluated in a 'scope'.
+			<c:set var="Income" scope="session" value="${4000*4}"/>  
+			<c:out value="${Income}"/>  
+			o/p 16000
+
+<c:remove> ==>		It is used for removing the specified variable from a particular scope
+			<c:set var="income" scope="session" value="${4000*4}"/>  
+			<p>Before Remove Value is: <c:out value="${income}"/></p>  
+			<c:remove var="income"/>  
+			<p>After Remove Value is: <c:out value="${income}"/></p>  
+			o/p
+			    Before Remove Value is: 16000  
+			    After Remove Value is:  
+
+<c:if> ==>		The < c:if > tag is used for testing the condition and it display the body content, if the expression evaluated is true.
+			<c:set var="income" scope="session" value="${4000*4}"/>  
+			<c:if test="${income > 8000}">  
+			<p>My income is: <c:out value="${income}"/><p>  
+			</c:if>
+
+			<c:set var="income" scope="session" value="${4000*4}"/>  
+				<p>Your income is : <c:out value="${income}"/></p>  
+			<c:choose>  
+			<c:when test="${income <= 1000}">  
+				Income is not good.  
+			</c:when>  
+			<c:when test="${income > 10000}">  
+				Income is very good.  
+			</c:when>  
+			<c:otherwise>  
+				Income is undetermined...  
+			</c:otherwise>  
+			</c:choose>  
+
+			<c:forEach var="j" begin="1" end="3">  
+			Item <c:out value="${j}"/><p>  
+			</c:forEach> 
+			0/p
+			Item 1  
+			Item 2  
+			Item 3  
+
+			<c:url value="/index1.jsp" var="completeURL"/>  
+			 <c:param name="trackingId" value="786"/>  
+			 <c:param name="user" value="Nakul"/>  
+			</c:url>  
+			${completeURL}
+			o/p
+			    /JSP/index1.jsp?trackingId=786&user=Nakul  
+
+			 <c:redirect url="http://javatpoint.com"/>  

@@ -1,0 +1,780 @@
+How many objects of a servlet is created?
+
+Only one object at the time of first request by servlet or web container.
+================================================================================
+What is the life-cycle of a servlet?
+
+    Servlet class is loaded.
+    Servlet instance is created.
+    init method is invoked.
+    service method is invoked.
+    destroy method is invoked.
+=================================================================================
+Who is responsible to create the object of servlet?
+
+The web container or servlet container.
+=================================================================================
+What is difference between Get and Post method?
+
+Get	Post
+1) Limited amount of data can be sent because data is sent in header.	Large amount of data can be sent because data is sent in body.
+2) Not Secured because data is exposed in URL bar.	Secured because data is not exposed in URL bar.
+3) Can be bookmarked	Cannot be bookmarked
+4) Idempotent	Non-Idempotent
+5) It is more efficient and used than Post	It is less efficient and used
+=================================================================================
+Servlet vs GenericServlet vs HttpServlet 
+
+1. Servlet interface
+
+It is the super interface for the remaining two – GenericServlet and HttpServlet. It contains 5 abstract methods
+
+Generic Servlet:
+
+    GenericServlet class is direct subclass of Servlet interface.
+    Generic Servlet is protocol independent.It handles all types  of protocol  like http, smtp, ftp etc.
+    Generic Servlet only supports  service() method.It handles only simple request 
+    public void service(ServletRequest req,ServletResponse res ).
+    Generic Servlet only supports  service() method.
+
+HttpServlet:
+
+    HttpServlet class is the direct subclass of Generic Servlet.
+    HttpServlet is protocol dependent. It handles only http protocol.
+    HttpServlet  supports public void service(ServletRequest req,ServletResponse res ) and protected void service(HttpServletRequest req,HttpServletResponse res).
+    HttpServlet supports also   doGet(),doPost(),doPut(),doDelete(),doHead(),doTrace(),doOptions()etc.
+==================================================================================
+
+What is servlet collaboration?
+
+When one servlet communicates to another servlet, it is known as servlet collaboration. There are many ways of servlet collaboration:
+
+    RequestDispacher interface
+    sendRedirect() method etc.
+The RequestDispatcher interface provides two methods. They are:
+
+    public void forward(ServletRequest request,ServletResponse response)throws ServletException,java.io.IOException:Forwards a request from a servlet to another resource (servlet, JSP file, or HTML file) on the server.
+    public void include(ServletRequest request,ServletResponse response)throws ServletException,java.io.IOException:Includes the content of a resource (servlet, JSP page, or HTML file) in the response.
+==================================================================================
+
+Can you call a jsp from the servlet?
+
+Yes, one of the way is RequestDispatcher interface for example:
+
+    RequestDispatcher rd=request.getRequestDispatcher("/login.jsp");  
+    rd.forward(request,response);  
+
+===================================================================================
+
+forward() method	sendRedirect() method
+1) forward() sends the same request to another resource.	1) sendRedirect() method sends new request always because it uses the URL bar of the browser.
+2) forward() method works at server side.	2) sendRedirect() method works at client side.
+3) forward() method works within the server only.	3) sendRedirect() method works within and outside the server.
+
+===================================================================================
+
+What is difference between ServletConfig and ServletContext?
+
+The container creates object of ServletConfig for each servlet whereas object of ServletContext is created for each web application.
+
+====================================================================================
+
+What is Session Tracking?
+
+Session simply means a particular interval of time.
+
+Session Tracking is a way to maintain state (data) of an user. It is also known as session management in servlet.
+
+Http protocol is a stateless so we need to maintain state using session tracking techniques. Each time user requests to the server, server treats the request as the new request. So we need to maintain the state of an user to recognize to particular user.
+
+HTTP is stateless that means each request is considered as the new request
+
+Session Tracking Techniques
+
+There are four techniques used in Session tracking:
+
+    Cookies
+    Hidden Form Field
+    URL Rewriting
+    HttpSession
+
+
+======================================================================================
+
+Cookies in Servlet
+
+A cookie is a small piece of information that is persisted between the multiple client requests.
+
+A cookie has a name, a single value, and optional attributes such as a comment, path and domain qualifiers, a maximum age, and a version number.
+How Cookie works
+
+By default, each request is considered as a new request. In cookies technique, we add cookie with response from the servlet. So cookie is stored in the cache of the browser. After that if request is sent by the user, cookie is added with request by default. Thus, we recognize the user as the old user.
+
+Types of Cookie
+
+There are 2 types of cookies in servlets.
+
+    Non-persistent cookie
+    Persistent cookie
+
+Non-persistent cookie
+
+It is valid for single session only. It is removed each time when user closes the browser.
+Persistent cookie
+
+It is valid for multiple session . It is not removed each time when user closes the browser. It is removed only if user logout or signout.
+Advantage of Cookies
+
+    Simplest technique of maintaining the state.
+    Cookies are maintained at client side.
+
+Disadvantage of Cookies
+
+    It will not work if cookie is disabled from the browser.
+    Only textual information can be set in Cookie object.
+
+======================================================================================
+
+Servlet Filter
+
+A filter is an object that is invoked at the preprocessing and postprocessing of a request.
+
+It is mainly used to perform filtering tasks such as conversion, logging, compression, encryption and decryption, input validation etc.
+
+The servlet filter is pluggable, i.e. its entry is defined in the web.xml file, if we remove the entry of filter from the web.xml file, filter will be removed automatically and we don't need to change the servlet.
+
+So maintenance cost will be less.
+
+Usage of Filter
+
+    recording all incoming requests
+    logs the IP addresses of the computers from which the requests originate
+    conversion
+    data compression
+    encryption and decryption
+    input validation etc.
+
+Advantage of Filter
+
+    Filter is pluggable.
+    One filter don't have dependency onto another resource.
+    Less Maintenance
+
+Filter API
+
+Like servlet filter have its own API. The javax.servlet package contains the three interfaces of Filter API.
+
+    Filter
+    FilterChain
+    FilterConfig
+
+1) Filter interface
+
+For creating any filter, you must implement the Filter interface. Filter interface provides the life cycle methods for a filter.
+Method	Description
+public void init(FilterConfig config)	init() method is invoked only once. It is used to initialize the filter.
+public void doFilter(HttpServletRequest request,HttpServletResponse response, FilterChain chain)	doFilter() method is invoked every time when user request to any resource, to which the filter is mapped.It is used to perform filtering tasks.
+public void destroy()	This is invoked only once when filter is taken out of the service.
+2) FilterChain interface
+
+The object of FilterChain is responsible to invoke the next filter or resource in the chain.This object is passed in the doFilter method of Filter interface.The FilterChain interface contains only one method:
+
+    public void doFilter(HttpServletRequest request, HttpServletResponse response): it passes the control to the next filter or resource.
+
+How to define Filter
+
+We can define filter same as servlet. Let's see the elements of filter and filter-mapping.
+
+    <web-app>  
+      
+    <filter>  
+    <filter-name>...</filter-name>  
+    <filter-class>...</filter-class>  
+    </filter>  
+       
+    <filter-mapping>  
+    <filter-name>...</filter-name>  
+    <url-pattern>...</url-pattern>  
+    </filter-mapping>  
+      
+    </web-app>  
+
+For mapping filter we can use, either url-pattern or servlet-name. The url-pattern elements has an advantage over servlet-name element i.e. it can be applied on servlet, JSP or HTML.
+Simple Example of Filter
+
+In this example, we are simply displaying information that filter is invoked automatically after the post processing of the request.
+index.html
+
+    <a href="servlet1">click here</a>  
+
+MyFilter.java
+
+    import java.io.IOException;  
+    import java.io.PrintWriter;  
+      
+    import javax.servlet.*;  
+      
+    public class MyFilter implements Filter{  
+      
+    public void init(FilterConfig arg0) throws ServletException {}  
+          
+    public void doFilter(ServletRequest req, ServletResponse resp,  
+        FilterChain chain) throws IOException, ServletException {  
+              
+        PrintWriter out=resp.getWriter();  
+        out.print("filter is invoked before");  
+              
+        chain.doFilter(req, resp);//sends request to next resource  
+              
+        out.print("filter is invoked after");  
+        }  
+        public void destroy() {}  
+    }  
+
+HelloServlet.java
+
+    import java.io.IOException;  
+    import java.io.PrintWriter;  
+      
+    import javax.servlet.ServletException;  
+    import javax.servlet.http.*;  
+      
+    public class HelloServlet extends HttpServlet {  
+        public void doGet(HttpServletRequest request, HttpServletResponse response)  
+                throws ServletException, IOException {  
+      
+            response.setContentType("text/html");  
+            PrintWriter out = response.getWriter();  
+          
+            out.print("<br>welcome to servlet<br>");  
+              
+        }  
+      
+    }  
+
+web.xml
+For defining the filter, filter element of web-app must be defined just like servlet.
+
+    <web-app>  
+      
+    <servlet>  
+    <servlet-name>s1</servlet-name>  
+    <servlet-class>HelloServlet</servlet-class>  
+    </servlet>  
+      
+    <servlet-mapping>  
+    <servlet-name>s1</servlet-name>  
+    <url-pattern>/servlet1</url-pattern>  
+    </servlet-mapping>  
+      
+    <filter>  
+    <filter-name>f1</filter-name>  
+    <filter-class>MyFilter</filter-class>  
+    </filter>  
+       
+    <filter-mapping>  
+    <filter-name>f1</filter-name>  
+    <url-pattern>/servlet1</url-pattern>  
+    </filter-mapping>  
+      
+      
+    </web-app>  
+
+===============================================================================
+
+Load on startup in web.xml
+
+The load-on-startup element of web-app loads the servlet at the time of deployment or server start if value is positive. It is also known as pre initialization of servlet.
+
+You can pass positive and negative value for the servlet.
+Advantage of load-on-startup element
+
+As you know well, servlet is loaded at first request. That means it consumes more time at first request. If you specify the load-on-startup in web.xml, servlet will be loaded at project deployment time or server start. So, it will take less time for responding to first request.
+Passing positive value
+
+If you pass the positive value, the lower integer value servlet will be loaded before the higher integer value servlet. In other words, container loads the servlets in ascending integer value. The 0 value will be loaded first then 1, 2, 3 and so on.
+
+Let's try to understand it by the example given below:
+web.xml
+
+    <web-app>  
+     ....  
+      
+      <servlet>  
+       <servlet-name>servlet1</servlet-name>  
+       <servlet-class>com.javatpoint.FirstServlet</servlet-class>  
+       <load-on-startup>0</load-on-startup>  
+      </servlet>  
+      
+      <servlet>  
+       <servlet-name>servlet2</servlet-name>  
+       <servlet-class>com.javatpoint.SecondServlet</servlet-class>  
+       <load-on-startup>1</load-on-startup>  
+      </servlet>  
+      
+     ...  
+    </web-app>  
+
+There are defined 2 servlets, both servlets will be loaded at the time of project deployment or server start. But, servlet1 will be loaded first then servlet2.
+
+===============================================================================
+
+How to create war file?
+
+The war file can be created using jar tool found in jdk/bin directory. If you are using Eclipse or Netbeans IDE, you can export your project as a war file.
+
+To create war file from console, you can write following code.
+
+    jar -cvf abc.war *  
+
+====================================================================================
+
+What are the annotations used in Servlet 3?
+
+There are mainly 3 annotations used for the servlet.
+
+    @WebServlet : for servlet class.
+    @WebListener : for listener class.
+    @WebFilter : for filter class.
+
+====================================================================================
+
+Which event is fired at the time of project deployment and undeployment?
+
+ServletContextEvent
+
+The ServletContextEvent is notified when web application is deployed on the server.
+
+If you want to perform some action at the time of deploying the web application such as creating database connection, creating all the tables of the project etc, you need to implement ServletContextListener interface and provide the implementation of its methods.
+
+Method of ServletContextEvent class
+
+There is only one method defined in the ServletContextEvent class:
+
+    public ServletContext getServletContext(): returns the instance of ServletContext.
+
+Methods of ServletContextListener interface
+
+There are two methods declared in the ServletContextListener interface which must be implemented by the servlet programmer to perform some action such as creating database connection etc.
+
+    public void contextInitialized(ServletContextEvent e): is invoked when application is deployed on the server.
+    public void contextDestroyed(ServletContextEvent e): is invoked when application is undeployed from the server.
+
+In this example, we are retrieving the data from the emp32 table. To serve this, we have created the connection object in the listener class and used the connection object in the servlet.
+index.html
+
+    <a href="servlet1">fetch records</a>  
+
+MyListener.java
+
+    import javax.servlet.*;  
+    import java.sql.*;  
+      
+    public class MyListener implements ServletContextListener{  
+    public void contextInitialized(ServletContextEvent event) {  
+    try{  
+    Class.forName("oracle.jdbc.driver.OracleDriver");  
+    Connection con=DriverManager.getConnection(  
+    "jdbc:oracle:thin:@localhost:1521:xe","system","oracle");  
+              
+    //storing connection object as an attribute in ServletContext  
+    ServletContext ctx=event.getServletContext();  
+    ctx.setAttribute("mycon", con);  
+              
+    }catch(Exception e){e.printStackTrace();}  
+    }  
+      
+    public void contextDestroyed(ServletContextEvent arg0) {}  
+    }  
+
+MyListener.java
+
+    import java.io.*;  
+    import javax.servlet.*;  
+    import javax.servlet.http.*;  
+    import java.sql.*;  
+      
+    public class FetchData extends HttpServlet {  
+          
+    public void doGet(HttpServletRequest request, HttpServletResponse response)  
+            throws ServletException, IOException {  
+      
+    response.setContentType("text/html");  
+    PrintWriter out = response.getWriter();  
+          
+    try{  
+    //Retrieving connection object from ServletContext object  
+    ServletContext ctx=getServletContext();  
+    Connection con=(Connection)ctx.getAttribute("mycon");  
+      
+    //retieving data  from emp32 table        
+    PreparedStatement ps=con.prepareStatement("select * from emp32",  
+    ResultSet.TYPE_SCROLL_SENSITIVE,ResultSet.CONCUR_UPDATABLE);  
+                  
+    ResultSet rs=ps.executeQuery();  
+    while(rs.next()){  
+    out.print("<br>"+rs.getString(1)+" "+rs.getString(2));  
+    }  
+                  
+    con.close();  
+    }catch(Exception e){e.printStackTrace();}  
+              
+    out.close();  
+    }  
+    } 
+====================================================================================
+
+ Which event is fired at the time of session creation and destroy?
+HttpSessionEvent
+
+HttpSessionEvent and HttpSessionListener
+
+The HttpSessionEvent is notified when session object is changed. The corresponding Listener interface for this event is HttpSessionListener.
+
+We can perform some operations at this event such as counting total and current logged-in users, maintaing a log of user details such as login time, logout time etc. 
+
+Methods of HttpSessionListener interface
+There are two methods declared in the HttpSessionListener interface which must be implemented by the servlet programmer to perform some action.
+
+    public void sessionCreated(HttpSessionEvent e): is invoked when session object is created.
+    public void sessionDestroyed(ServletContextEvent e): is invoked when session is invalidated.
+
+Example of HttpSessionEvent and HttpSessionListener to count total and current logged-in users
+In this example, are counting the total and current logged-in users. For this purpose, we have created three files:
+
+    index.html: to get input from the user.
+    MyListener.java: A listener class that counts total and current logged-in users and stores this information in ServletContext object as an attribute.
+    First.java: A Servlet class that creates session and prints the total and current logged-in users.
+    Logout.java: A Servlet class that invalidates session.
+
+index.html
+
+    <form action="servlet1">  
+    Name:<input type="text" name="username"><br>  
+    Password:<input type="password" name="userpass"><br>  
+      
+    <input type="submit" value="login"/>  
+    </form>  
+
+MyListener.java
+
+    import javax.servlet.ServletContext;  
+    import javax.servlet.http.HttpSessionEvent;  
+    import javax.servlet.http.HttpSessionListener;  
+      
+    public class CountUserListener implements HttpSessionListener{  
+        ServletContext ctx=null;  
+        static int total=0,current=0;  
+          
+        public void sessionCreated(HttpSessionEvent e) {  
+        total++;  
+        current++;  
+          
+        ctx=e.getSession().getServletContext();  
+        ctx.setAttribute("totalusers", total);  
+        ctx.setAttribute("currentusers", current);  
+          
+        }  
+      
+        public void sessionDestroyed(HttpSessionEvent e) {  
+            current--;  
+            ctx.setAttribute("currentusers",current);  
+        }  
+      
+    }  
+
+First.java
+
+    import java.io.IOException;  
+    import java.io.PrintWriter;  
+      
+    import javax.servlet.ServletContext;  
+    import javax.servlet.ServletException;  
+    import javax.servlet.http.HttpServlet;  
+    import javax.servlet.http.HttpServletRequest;  
+    import javax.servlet.http.HttpServletResponse;  
+    import javax.servlet.http.HttpSession;  
+      
+    public class First extends HttpServlet {  
+    public void doGet(HttpServletRequest request,  
+     HttpServletResponse response)  
+        throws ServletException, IOException {  
+      
+            response.setContentType("text/html");  
+            PrintWriter out = response.getWriter();  
+          
+            String n=request.getParameter("username");  
+            out.print("Welcome "+n);  
+              
+            HttpSession session=request.getSession();  
+            session.setAttribute("uname",n);  
+              
+            //retrieving data from ServletContext object  
+            ServletContext ctx=getServletContext();  
+            int t=(Integer)ctx.getAttribute("totalusers");  
+            int c=(Integer)ctx.getAttribute("currentusers");  
+            out.print("<br>total users= "+t);  
+            out.print("<br>current users= "+c);  
+              
+            out.print("<br><a href='logout'>logout</a>");  
+              
+            out.close();  
+        }  
+      
+    }  
+
+Logout.java
+
+    import java.io.IOException;  
+    import java.io.PrintWriter;  
+      
+    import javax.servlet.ServletException;  
+    import javax.servlet.http.HttpServlet;  
+    import javax.servlet.http.HttpServletRequest;  
+    import javax.servlet.http.HttpServletResponse;  
+    import javax.servlet.http.HttpSession;  
+      
+      
+    public class LogoutServlet extends HttpServlet {  
+    public void doGet(HttpServletRequest request,  
+     HttpServletResponse response)  
+            throws ServletException, IOException {  
+      
+            response.setContentType("text/html");  
+            PrintWriter out = response.getWriter();  
+          
+            HttpSession session=request.getSession(false);  
+            session.invalidate();//invalidating session  
+              
+            out.print("You are successfully logged out");  
+              
+              
+            out.close();  
+        }  
+      
+    }  
+
+==================================================================================
+
+Which event is fired at the time of setting, getting or removing attribute from application scope?
+
+ServletContextAttributeEvent
+
+====================================================================================
+
+welcome-file-list in web.xml
+
+The welcome-file-list element of web-app, is used to define a list of welcome files. Its sub element is welcome-file that is used to define the welcome file.
+
+A welcome file is the file that is invoked automatically by the server, if you don't specify any file name.
+
+By default server looks for the welcome file in following order:
+
+    welcome-file-list in web.xml
+    index.html
+    index.htm
+    index.jsp
+
+If none of these files are found, server renders 404 error.
+
+If you have specified welcome-file in web.xml, and all the files index.html, index.htm and index.jsp exists, priority goes to welcome-file.
+
+If welcome-file-list entry doesn't exist in web.xml file, priority goes to index.html file then index.htm and at last index.jsp file.
+
+=========================================================================================
+
+How to detect locale in Servlets?
+
+
+
+Following is the method of request object which returns Locale object.
+
+java.util.Locale request.getLocale() 
+
+===================================================================================
+
+How to get country name in Servlets?
+
+
+
+Following method returns a name for the locale's country that is appropriate for display to the user.
+
+String getDisplayCountry()
+
+====================================================================================
+
+How to configure the session timeout in servlet
+
+<web-app ...>
+	<session-config>
+		<session-timeout>20</session-timeout>
+	</session-config>
+</web-app>
+Specified the timeout value in “minute” , enclose with “session-config” element.
+HttpSession session = request.getSession();
+session.setMaxInactiveInterval(20*60);
+– You can manually specified the timeout value in “second” for a particular session. 
+
+====================================================================================
+
+How to create a session in servlet?
+
+// Create a session object if it is already not  created.
+HttpSession session = request.getSession();
+
+==================================================================================
+
+ How to delete a session in servlet?
+HttpSession session = request.getSession(false);
+if (session != null) {
+    session.invalidate();
+}
+
+======================================================================================
+// Import required java libraries
+import java.io.*;
+import javax.servlet.*;
+import javax.servlet.http.*;
+ 
+// Extend HttpServlet class
+public class HelloForm extends HttpServlet {
+ 
+  public void doGet(HttpServletRequest request,
+                    HttpServletResponse response)
+            throws ServletException, IOException
+  {
+      // Create cookies for first and last names.      
+      Cookie firstName = new Cookie("first_name",
+                      request.getParameter("first_name"));
+      Cookie lastName = new Cookie("last_name",
+                      request.getParameter("last_name"));
+
+      // Set expiry date after 24 Hrs for both the cookies.
+      firstName.setMaxAge(60*60*24); 
+      lastName.setMaxAge(60*60*24); 
+
+      // Add both the cookies in the response header.
+      response.addCookie( firstName );
+      response.addCookie( lastName );
+
+      // Set response content type
+      response.setContentType("text/html");
+ 
+      PrintWriter out = response.getWriter();
+      String title = "Setting Cookies Example";
+      String docType =
+      "<!doctype html public \"-//w3c//dtd html 4.0 " +
+      "transitional//en\">\n";
+      out.println(docType +
+                "<html>\n" +
+                "<head><title>" + title + "</title></head>\n" +
+                "<body bgcolor=\"#f0f0f0\">\n" +
+                "<h1 align=\"center\">" + title + "</h1>\n" +
+                "<ul>\n" +
+                "  <li><b>First Name</b>: "
+                + request.getParameter("first_name") + "\n" +
+                "  <li><b>Last Name</b>: "
+                + request.getParameter("last_name") + "\n" +
+                "</ul>\n" +
+                "</body></html>");
+  }
+}
+
+// Import required java libraries
+import java.io.*;
+import javax.servlet.*;
+import javax.servlet.http.*;
+ 
+// Extend HttpServlet class
+public class ReadCookies extends HttpServlet {
+ 
+  public void doGet(HttpServletRequest request,
+                    HttpServletResponse response)
+            throws ServletException, IOException
+  {
+      Cookie cookie = null;
+	  Cookie[] cookies = null;
+      // Get an array of Cookies associated with this domain
+      cookies = request.getCookies();
+      
+	  // Set response content type
+      response.setContentType("text/html");
+ 
+      PrintWriter out = response.getWriter();
+      String title = "Reading Cookies Example";
+      String docType =
+      "<!doctype html public \"-//w3c//dtd html 4.0 " +
+      "transitional//en\">\n";
+      out.println(docType +
+                "<html>\n" +
+                "<head><title>" + title + "</title></head>\n" +
+                "<body bgcolor=\"#f0f0f0\">\n" );
+      if( cookies != null ){
+         out.println("<h2> Found Cookies Name and Value</h2>");
+         for (int i = 0; i < cookies.length; i++){
+            cookie = cookies[i];
+            out.print("Name : " + cookie.getName( ) + ",  ");
+            out.print("Value: " + cookie.getValue( )+" <br/>");
+         }
+      }else{
+          out.println(
+            "<h2>No cookies founds</h2>");
+      }
+      out.println("</body>");
+      out.println("</html>");
+   }
+}
+
+// Import required java libraries
+import java.io.*;
+import javax.servlet.*;
+import javax.servlet.http.*;
+ 
+// Extend HttpServlet class
+public class DeleteCookies extends HttpServlet {
+ 
+  public void doGet(HttpServletRequest request,
+                    HttpServletResponse response)
+            throws ServletException, IOException
+  {
+      Cookie cookie = null;
+	  Cookie[] cookies = null;
+      // Get an array of Cookies associated with this domain
+      cookies = request.getCookies();
+      
+	  // Set response content type
+      response.setContentType("text/html");
+ 
+      PrintWriter out = response.getWriter();
+      String title = "Delete Cookies Example";
+      String docType =
+      "<!doctype html public \"-//w3c//dtd html 4.0 " +
+      "transitional//en\">\n";
+      out.println(docType +
+                "<html>\n" +
+                "<head><title>" + title + "</title></head>\n" +
+                "<body bgcolor=\"#f0f0f0\">\n" );
+       if( cookies != null ){
+         out.println("<h2> Cookies Name and Value</h2>");
+         for (int i = 0; i < cookies.length; i++){
+            cookie = cookies[i];
+            if((cookie.getName( )).compareTo("first_name") == 0 ){
+                 cookie.setMaxAge(0);
+                 response.addCookie(cookie);
+                 out.print("Deleted cookie : " + 
+                              cookie.getName( ) + "<br/>");
+            }
+            out.print("Name : " + cookie.getName( ) + ",  ");
+            out.print("Value: " + cookie.getValue( )+" <br/>");
+         }
+      }else{
+          out.println(
+            "<h2>No cookies founds</h2>");
+      }
+      out.println("</body>");
+      out.println("</html>");
+   }
+}
+====================================================================================
+
+
