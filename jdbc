@@ -1,0 +1,170 @@
+ 1) What is JDBC?
+
+JDBC is a Java API that is used to connect and execute query to the database. JDBC API uses jdbc drivers to connects to the database.
+
+=======================================================================================
+
+What is JDBC Driver?
+
+JDBC Driver is a software component that enables java application to interact with the database.There are 4 types of JDBC drivers:
+
+    JDBC-ODBC bridge driver
+    Native-API driver (partially java driver)
+    Network Protocol driver (fully java driver)
+    Thin driver (fully java driver)
+========================================================================================
+
+What are the JDBC statements?
+
+There are 3 JDBC statements.
+
+    Statement
+    PreparedStatement
+    CallableStatement
+
+=========================================================================================
+
+PreparedStatement interface
+
+The PreparedStatement interface is a subinterface of Statement. It is used to execute parameterized query.
+
+Let's see the example of parameterized query:
+
+    String sql="insert into emp values(?,?,?)";  
+
+As you can see, we are passing parameter (?) for the values. Its value will be set by calling the setter methods of PreparedStatement.
+Why use PreparedStatement?
+
+Improves performance: The performance of the application will be faster if you use PreparedStatement interface because query is compiled only once.
+How to get the instance of PreparedStatement?
+
+The prepareStatement() method of Connection interface is used to return the object of PreparedStatement. Syntax:
+
+    public PreparedStatement prepareStatement(String query)throws SQLException{}  
+
+Methods of PreparedStatement interface
+
+The important methods of PreparedStatement interface are given below:
+Method	Description
+public void setInt(int paramIndex, int value)	sets the integer value to the given parameter index.
+public void setString(int paramIndex, String value)	sets the String value to the given parameter index.
+public void setFloat(int paramIndex, float value)	sets the float value to the given parameter index.
+public void setDouble(int paramIndex, double value)	sets the double value to the given parameter index.
+public int executeUpdate()	executes the query. It is used for create, drop, insert, update, delete etc.
+public ResultSet executeQuery()	executes the select query. It returns an instance of ResultSet.
+Example of PreparedStatement interface that inserts the record
+
+First of all create table as given below:
+
+    create table emp(id number(10),name varchar2(50));  
+
+Now insert records in this table by the code given below:
+
+    import java.sql.*;  
+    class InsertPrepared{  
+    public static void main(String args[]){  
+    try{  
+    Class.forName("oracle.jdbc.driver.OracleDriver");  
+      
+    Connection con=DriverManager.getConnection("jdbc:oracle:thin:@localhost:1521:xe","system","oracle");  
+      
+    PreparedStatement stmt=con.prepareStatement("insert into Emp values(?,?)");  
+    stmt.setInt(1,101);//1 specifies the first parameter in the query  
+    stmt.setString(2,"Ratan");  
+      
+    int i=stmt.executeUpdate();  
+    System.out.println(i+" records inserted");  
+      
+    con.close();  
+      
+    }catch(Exception e){ System.out.println(e);}  
+      
+    }  
+    }  
+
+====================================================================================
+
+How can we execute stored procedures and functions?
+
+By using Callable statement interface, we can execute procedures and functions.
+
+===================================================================================
+
+What is the role of JDBC DriverManager class?
+
+The DriverManager class manages the registered drivers. It can be used to register and unregister drivers. It acts as an interface between user and drivers.
+
+=====================================================================================
+
+What does the JDBC Connection interface?
+
+The Connection interface maintains a session with the database. It can be used for transaction management. By default, connection commits the changes after executing queries.
+1) public Statement createStatement(): creates a statement object that can be used to execute SQL queries.
+2) public Statement createStatement(int resultSetType,int resultSetConcurrency): Creates a Statement object that will generate ResultSet objects with the given type and concurrency.
+3) public void setAutoCommit(boolean status): is used to set the commit status.By default it is true.
+4) public void commit(): saves the changes made since the previous commit/rollback permanent.
+5) public void rollback(): Drops all changes made since the previous commit/rollback.
+6) public void close(): closes the connection and Releases a JDBC resources immediately.
+
+========================================================================================
+
+What does the JDBC ResultSet interface?
+
+The ResultSet object represents a row of a table. By default, ResultSet object can be moved forward only and it is not updatable. 
+
+ But we can make this object to move forward and backward direction by passing either TYPE_SCROLL_INSENSITIVE or TYPE_SCROLL_SENSITIVE in createStatement(int,int) method as well as we can make this object as updatable by:
+
+    Statement stmt = con.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE,  
+                         ResultSet.CONCUR_UPDATABLE);  
+
+1) public boolean next():	is used to move the cursor to the one row next from the current position.
+2) public boolean previous():	is used to move the cursor to the one row previous from the current position.
+3) public boolean first():	is used to move the cursor to the first row in result set object.
+4) public boolean last():	is used to move the cursor to the last row in result set object.
+5) public boolean absolute(int row):	is used to move the cursor to the specified row number in the ResultSet object.
+6) public boolean relative(int row):	is used to move the cursor to the relative row number in the ResultSet object, it may be positive or negative.
+7) public int getInt(int columnIndex):	is used to return the data of specified column index of the current row as int.
+8) public int getInt(String columnName):	is used to return the data of specified column name of the current row as int.
+9) public String getString(int columnIndex):	is used to return the data of specified column index of the current row as String.
+10) public String getString(String columnName):
+
+=======================================================================================
+
+What is the mean of “dirty read“ in database?
+
+ when one transaction is executing and changing some field value same time some another transaction comes and read the change field value before first transaction commit or rollback the value ,which cause invalid value for that field, this scenario is known as dirty read.
+
+=======================================================================================
+
+What do you mean by cold backup, hot backup?
+
+Cold back is the backup techniques in which backup of files are taken before the database restarted. In hot backup backup of files and table is taken at the same time when database is running
+
+========================================================================================
+
+How to set NULL values in JDBC PreparedStatement?
+
+We can use PreparedStatement setNull() method to bind the null variable to a parameter. The setNull method takes index and SQL Types as argument, for example
+ps.setNull(10, java.sql.Types.INTEGER);.
+
+=======================================================================================
+
+What are the different types of locking in JDBC?
+
+    Optimistic Locking – Locking the record only when update is taking place
+    Pessimistic Locking – Locking the record from the select to read, update and commit phase.
+
+=======================================================================================
+
+What is difference between java.util.Date and java.sql.Date?
+
+java.util.Date contains information about the date and time whereas java.sql.Date contains information only about the date, 
+
+=======================================================================================
+
+What is the purpose of the PL/SQL language?
+
+PL/SQL is an extension of SQL. SQL is non-procedural. PL/SQL is a procedural language designed by oracle to overcome the limitations that exist in SQL.
+=======================================================================================
+
+
