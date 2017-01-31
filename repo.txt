@@ -190,3 +190,14 @@ function cp_wpcf7_override($form)
 			}				
 		});
 	});
+
+////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////  Disabling Plugin Update  ////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////
+function disable_plugin_updates( $value ) {
+    unset( $value->response['wp-store-locator/wp-store-locator.php'] );
+    // in case if there are multiple plugins
+    //unset( $value->response['folder_name/main_file.php'] );
+    return $value;
+}
+add_filter( 'site_transient_update_plugins', 'disable_plugin_updates' );
