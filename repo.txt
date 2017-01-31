@@ -202,3 +202,205 @@ function disable_plugin_updates( $value ) {
     return $value;
 }
 add_filter( 'site_transient_update_plugins', 'disable_plugin_updates' );
+
+////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////  Custom WP Login  ////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////
+
+add_action( 'wp_ajax_clientLogin', 'clientLogin__' );
+add_action( 'wp_ajax_nopriv_clientLogin', 'clientLogin__' );
+function clientLogin__(){
+	$info = array();
+	$info['user_login'] = $_POST['uname'];
+	$info['user_password'] = $_POST['pass'];
+	$info['remember'] = $_POST['remember'];
+	
+	$user_signon = wp_signon( $info, false );
+	if( is_wp_error($user_signon) ){
+		echo json_encode(array('loggedin'=>false, 'message'=>__('Wrong username or password.')));
+	}else{
+		wp_set_current_user($user_signon->ID);
+		echo json_encode(array('loggedin'=>true, 'message'=>__('Login successful, redirecting...')));
+	}
+	die();
+}
+if ( ! current_user_can( 'manage_options' ) ) {
+    show_admin_bar( false );
+}	
+
+////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////  Custom WP Forget Password  //////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////
+
+add_action( 'wp_ajax_forgetPass', 'forgetPass__' );
+add_action( 'wp_ajax_nopriv_forgetPass', 'forgetPass__' );
+function forgetPass__(){
+	global $wpdb,$wp_hasher;
+	$reset_details = trim($_REQUEST['user_login']);
+	if(strpos($reset_details, '@')) {
+		$user = get_user_by('email', $reset_details);
+	}else{
+		$user = get_user_by('login', $reset_details);
+	}
+	if(empty($user)) {
+		echo json_encode(array('err'=>true, 'message'=>__('Wrong username or email')));	die();	
+	}
+	$user_login = $user->user_login;
+	$user_email = $user->user_email;
+	$key = wp_generate_password( 20, false );
+	do_action( 'retrieve_password_key', $user_login, $key );
+	if ( empty( $wp_hasher ) ) {
+		require_once ABSPATH . WPINC . '/class-phpass.php';
+		$wp_hasher = new PasswordHash( 8, true );
+	}
+	$hashed = time() . ':' . $wp_hasher->HashPassword( $key );
+	$error = $wpdb->update( $wpdb->users, array( 'user_activation_key' => $hashed ), array( 'user_login' => $user_login ) );
+	$message  ="
+		<html>
+		<head>
+		<title></title>
+		<style type='text/css'>
+		table{border: 0; font: normal 16px Arial, Helvetica, sans-serif; color: #353535;width: 100%;}
+		table table{width: 100%;}
+		table td {border:0; padding: 20px 10px}
+		table tr{border-bottom: 1px dotted #c5c5c5;}
+		</style>
+		</head>
+		<body>
+		<table border='0' cellspacing='0' cellpadding='0'>
+		<tbody>
+		<tr>
+		<td colspan=2><div style='margin:0 auto;text-align: center'>
+		<img style='display:block;width:300;height=87;border=0;' alt='' src='".get_template_directory_uri()."/images/logo.png' class='CToWUd'></div></td>
+		</tr>
+		<tr>
+		<td colspan=2 style='background: #eeeeee; padding: 20px 10px'>
+		<table cellspacing='0' cellpadding='0' border='0'>
+		<tbody>
+		<tr>
+		<td colspan=2 style='color: #353535; padding: 20px 10px'>
+		<strong style='font-size:16px;'>".sprintf('Hello, %s', esc_html($user_login) )."</strong>
+		<p style='font-size:16px;'>
+		Someone has asked to reset the password for the following site and username.To reset your password please click the reset button, otherwise just ignore this email and nothing will happen.
+		</p>
+		</td>
+		</tr>
+		<tr>
+		<td colspan=2 style='color: #353535; padding: 20px 10px'>
+		<a style='transition: 0.3s;display:  block;width: 130px;margin: 0 auto;padding: 20px 0px;background: #00AEEF;color:#000;text-align: center;font-weight: 600;text-decoration: none;border-radius: 5px;' href='".network_site_url("/log-in/?action=rp&key=$hashed&login=" . rawurlencode($user_login))."' target='_blank' class='button'>Reset Password</a>
+		</td>
+		</tr>
+		</tbody>
+		</table>
+		</tr>
+		<tr>
+		<td bgcolor='#00aeef' colspan=2 style='text-align:center;color:white; padding: 20px 10px'><h3> © 2016 American First Builders. All Rights Reserved. </h3></td>
+		</tr>
+		</tbody>
+		</table>
+		</body>
+		</html>";
+	$headers = 'From: No Reply <noreply@'.$_SERVER['HTTP_HOST'].'>' . "\r\n";
+	$headers .= "MIME-Version: 1.0" . "\r\n";
+	$headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
+	mail(
+		esc_html($user_email),
+		sprintf('[%s] Password Reset Request', get_option('blogname') ),
+		$message,
+		$headers
+	);
+	echo json_encode(array('err'=>false, 'message'=>__('Password reset instruction sent to your mail id!')));
+	die();
+}
+
+add_action( 'wp_ajax_forgetPassProcess', 'forgetPassProcess__' );
+add_action( 'wp_ajax_nopriv_forgetPassProcess', 'forgetPassProcess__' );
+function forgetPassProcess__(){
+	global $wpdb;
+	//if(!isset($_REQUEST['key'])){
+	//	wp_safe_redirect( home_url() );
+	//	exit();
+	//}
+	$new_password = $_POST['new_password'];
+	$confirm_passowrd = $_POST['confirm_passowrd'];
+	$key =  $_POST['key'];
+	$login = $_POST['login'];
+	
+	if($new_password !== $confirm_passowrd){
+		echo json_encode(array('err'=>true, 'message'=>__('Password mismatch!')));
+		die();
+	}
+	$user = $wpdb->get_var($wpdb->prepare("SELECT `id` FROM {$wpdb->users} WHERE `user_activation_key` = %s and `user_login`= %s", $key,$login));
+	$user_email = $wpdb->get_var($wpdb->prepare("SELECT `user_email` FROM {$wpdb->users} WHERE `user_activation_key` = %s and `user_login`= %s", $key,$login));
+	$expiration_duration = apply_filters( 'password_reset_expiration', 3600 );   
+	list( $pass_request_time, $pass_key ) = explode( ':', $key, 2 );
+	$expiration_time = $pass_request_time + $expiration_duration;
+	if(empty($user)){  
+		echo json_encode(array('err'=>true, 'message'=>__('Sorry, the link does not appear to be valid!')));
+		die();
+	}
+	if(time() > $expiration_time ){
+		echo json_encode(array('err'=>true, 'message'=>__('Sorry, the link is expired!')));
+		die();
+	}
+	$user_object = new WP_User($user);
+	reset_password($user_object, $new_password);
+	$message  ="
+		<html>
+		<head>
+		<title></title>
+		<style type='text/css'>
+		table{border: 0; font: normal 16px Arial, Helvetica, sans-serif; color: #353535;width: 100%;}
+		table table{width: 100%;}
+		table td {border:0; padding: 20px 10px}
+		table tr{border-bottom: 1px dotted #c5c5c5;}
+		</style>
+		</head>
+		<body>
+		<table border='0' cellspacing='0' cellpadding='0'>
+		<tbody>
+		<tr>
+		<td colspan=2><div style='margin:0 auto;text-align: center'>
+		<img style='display:block;width:300;height=87;border=0;' alt='' src='".get_template_directory_uri()."/images/logo.png' class='CToWUd'></div></td>
+		</tr>
+		<tr>
+		<td colspan=2 style='background: #eeeeee; padding: 20px 10px'>
+		<table cellspacing='0' cellpadding='0' border='0'>
+		<tbody>
+		<tr>
+		<td colspan=2 style='color: #353535; padding: 20px 10px'>
+		<strong style='font-size:16px;'>".sprintf('Hello, %s', esc_html($user_login) )."</strong>
+		<p style='font-size:16px;'>
+		Your password has been changed successfully.Click on the button to login.
+		</p>
+		</td>
+		</tr>
+		<tr>
+		<td colspan=2 style='color: #353535; padding: 20px 10px'>
+		<a style='transition: 0.3s;display:  block;width: 130px;margin: 0 auto;padding: 20px 0px;background: #00AEEF;color:#000;text-align: center;font-weight: 600;text-decoration: none;border-radius: 5px;' href='".home_url('/signin/')."' target='_blank' class='button'>Login</a>
+		</td>
+		</tr>
+		</tbody>
+		</table>
+		</tr>
+		<tr>
+		<td bgcolor='#00aeef' colspan=2 style='text-align:center;color:white; padding: 20px 10px'><h3> © 2016 American First Builders. All Rights Reserved. </h3></td>
+		</tr>
+		</tbody>
+		</table>
+		</body>
+		</html>";
+	$headers = 'From: No Reply <noreply@'.$_SERVER['HTTP_HOST'].'>' . "\r\n";
+	$headers .= "MIME-Version: 1.0" . "\r\n";
+	$headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
+	
+	mail(
+		$user_email,
+		sprintf('[%s] Password changed', get_option('blogname') ),
+		$message,
+		$headers
+	);
+	echo json_encode(array('err'=>false, 'message'=>__('Password reset successfull, redirecting to signin page')));
+	die();
+}
+
